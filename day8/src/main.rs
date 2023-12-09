@@ -1,5 +1,6 @@
-use std::{path::Path, fs::File, io::Read, cmp::{Ordering, self}};
+use std::{path::Path, fs::File, io::Read, collections::HashMap};
 use nom;
+use gcd::Gcd;
 
 fn main() {
     // Create a path to the desired file
@@ -18,159 +19,71 @@ fn main() {
         Err(why) => panic!("couldn't read {}: {}", display, why),
         Ok(_) => (),
     }
-
-    let (_, mut games) = nom::multi::separated_list1(
+    let input = file_contents.as_str();
+    let (input, directions) = nom::character::complete::alpha1::<&str, nom::error::Error<_>>(input).unwrap();
+    let (input, _) = nom::character::complete::multispace1::<&str, nom::error::Error<_>>(input).unwrap();
+    let (_, nodes) = nom::multi::separated_list1(
         nom::character::complete::line_ending, 
-        Game::parse
-    )(&file_contents).unwrap();
+        Node::parse
+    )(input).unwrap();
 
-    games.sort_by(|a, b| a.cmp(&b));
+    let directions = directions.chars().collect::<Vec<char>>();
+    let nodes_map: HashMap<_,_> = nodes.iter().map(|n| (&n.id, n)).collect();
 
-    let mut total = 0;
-    let mut i = 1;
-    for g in games {
-        total += g.bid * i;
-        i += 1;
+    let start = nodes.iter().filter(|n| n.id.ends_with("A")).collect::<Vec<&Node>>();
+
+    let mut factors: Vec<u64> = Vec::new();
+    for mut me in start {
+        let mut i = 0;
+        while !me.id.ends_with("Z") {
+            let next_me = match directions[i % directions.len()] {
+                'L' => &me.left,
+                'R' => &me.right,
+                _ => unreachable!()
+            };
+            me = nodes_map[next_me];
+            i = i + 1;
+        }
+        factors.push(i.try_into().unwrap());
     }
 
+    let mut divisors = Vec::new();
+    println!("{} {:?}", directions.len(), factors);
+    let l: u64 = directions.len().try_into().unwrap();
+    for i in 0..factors.len() {
+        divisors.push(factors[i] / l);
+    }
+    println!("{} {:?}", directions.len(), divisors);
+
+    let mut f = factors[0];
+    for i in 1..factors.len() {
+        let other = factors[i];
+        let gcd = f.gcd(other);
+        f = f / gcd * other;
+    }
+    println!("Total: {}", f);
+    let mut total = l;
+    for n in divisors {
+        total = total * n;
+    }
     println!("Total: {}", total);
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord)]
-enum HandType {
-    HighCard = 0,
-    OnePair = 1,
-    TwoPair = 2,
-    ThreeOfAKind = 3,
-    FullHouse = 4,
-    FourOfAKind = 5,
-    FiveOfAKind = 6,
-}
-
 #[derive(Debug)]
-struct Game {
-    cards : Vec<usize>,
-    bid : u64,
-    hand : HandType,
+struct Node {
+    id : String,
+    left : String,
+    right : String,
 }
 
-impl Game {
+impl Node {
     fn parse(input: &str) -> nom::IResult<&str, Self> {
-        let (input, cards) = nom::combinator::map(
-            nom::multi::many1(nom::character::complete::none_of(" ")),
-            |v| {
-                v.iter().map(|c| {
-                    match *c {
-                        '2' => 1,
-                        '3' => 2,
-                        '4' => 3,
-                        '5' => 4,
-                        '6' => 5,
-                        '7' => 6,
-                        '8' => 7,
-                        '9' => 8,
-                        'T' => 9,
-                        'J' => 0,
-                        'Q' => 11,
-                        'K' => 12,
-                        'A' => 13,
-                        _ => panic!("what did you give me"),
-                    }
-                }
-            ).collect::<Vec<usize>>()
-            }
-        )(input)?;
-        let (input, _) = nom::character::complete::multispace1(input)?;
-        let (input, bid) = nom::character::complete::u64(input)?;
-
-        let mut hand = HandType::HighCard;
-        let mut radix = vec![0u8;14];
-        for n in &cards {
-            let n = *n;
-            let count = radix[n] + 1;
-            radix[n] = count;
-            if n != 0 {
-                hand = match count {
-                    2 => {
-                        match hand {
-                            HandType::HighCard => HandType::OnePair,
-                            HandType::OnePair => HandType::TwoPair,
-                            HandType::ThreeOfAKind => HandType::FullHouse,
-                            _ => panic!("lol what hand: {:?}", hand)
-                        }
-                    }
-                    3 => {
-                        match hand {
-                            HandType::OnePair => HandType::ThreeOfAKind,
-                            HandType::TwoPair => HandType::FullHouse,
-                            _ => panic!("lol what hand: {:?}", hand)
-                        }
-                    }
-                    4 => {
-                        match hand {
-                            HandType::ThreeOfAKind => HandType::FourOfAKind,
-                            _ => panic!("lol what hand: {:?}", hand)
-                        }
-                    }
-                    5 => {
-                        match hand {
-                            HandType::FourOfAKind => HandType::FiveOfAKind,
-                            _ => panic!("lol what hand: {:?}", hand)
-                        }
-                    }
-                    _ => hand,
-                };
-            }
-        }
-
-        let mut highest = 0;
-        for i in 1..radix.len() {
-            let n = radix[i];
-            highest = cmp::max(highest, n);
-        }
-        println!("Hand: {:13} Highest: {}, J: {}, Cards: {:?}", format!("{:?}", hand), highest, radix[0], cards);
-        for i in 0..radix[0] {
-            let count = highest + i + 1;
-            hand = match count {
-                2 => {
-                    match hand {
-                        HandType::HighCard => HandType::OnePair,
-                        HandType::OnePair => HandType::TwoPair,
-                        HandType::ThreeOfAKind => HandType::FullHouse,
-                        _ => panic!("lol what hand: {:?}", hand)
-                    }
-                }
-                3 => {
-                    match hand {
-                        HandType::OnePair => HandType::ThreeOfAKind,
-                        HandType::TwoPair => HandType::FullHouse,
-                        _ => panic!("lol what hand: {:?}", hand)
-                    }
-                }
-                4 => {
-                    match hand {
-                        HandType::ThreeOfAKind => HandType::FourOfAKind,
-                        _ => panic!("lol what hand: {:?}", hand)
-                    }
-                }
-                5 => {
-                    match hand {
-                        HandType::FourOfAKind => HandType::FiveOfAKind,
-                        _ => panic!("lol what hand: {:?}", hand)
-                    }
-                }
-                _ => hand,
-            };
-        }
-
-        Ok((input, Self { cards, bid, hand }))
-    }
-
-    fn cmp(&self, other: &Self) -> Ordering {
-        if self.hand == other.hand {
-            self.cards.cmp(&other.cards)
-        } else {
-            self.hand.cmp(&other.hand)
-        }
+        let (input, id) = nom::character::complete::alpha1(input)?;
+        let (input, _) = nom::bytes::complete::tag(" = (")(input)?;
+        let (input, left) = nom::character::complete::alpha1(input)?;
+        let (input, _) = nom::bytes::complete::tag(", ")(input)?;
+        let (input, right) = nom::character::complete::alpha1(input)?;
+        let (input, _) = nom::bytes::complete::tag(")")(input)?;
+        Ok((input, Self { id: id.to_string(), left: left.to_string(), right: right.to_string() }))
     }
 }
