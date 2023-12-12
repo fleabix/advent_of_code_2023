@@ -1,6 +1,5 @@
-use std::{path::Path, fs::File, io::Read, cmp};
+use std::{path::Path, fs::File, io::Read};
 use nom::{self, Finish};
-use itertools::Itertools;
 
 fn main() {
     // Create a path to the desired file
@@ -112,7 +111,7 @@ impl Mapper {
         Ok((input, Self { _name: format!("{} {} {}", source, to, destination) , conversions }))
     }
 
-    fn map(&self, from : u64) -> u64 {
+    fn _map(&self, from : u64) -> u64 {
         for (src, dst, len) in &self.conversions {
             if from < *src {
                 return from;

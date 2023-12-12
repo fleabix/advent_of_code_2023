@@ -1,5 +1,4 @@
 use std::{path::Path, fs::File, io::Read};
-use nom;
 
 fn main() {
     // Create a path to the desired file
@@ -80,8 +79,6 @@ fn main() {
 
 #[derive(PartialEq, Debug)]
 enum Directions {
-    Right,
     Down,
     Up,
-    Left,
 }
