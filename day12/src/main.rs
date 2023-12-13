@@ -1,4 +1,4 @@
-use std::{path::Path, fs::File, io::Read, collections::HashSet, cmp};
+use std::{fs::File, io::Read, path::Path, collections::HashMap};
 
 fn main() {
     // Create a path to the desired file
@@ -17,82 +17,110 @@ fn main() {
         Err(why) => panic!("couldn't read {}: {}", display, why),
         Ok(_) => (),
     }
-    
-    let mut galaxies = HashSet::new();
-    let mut empty_rows = Vec::new();
-    let mut empty_cols = Vec::new();
 
-    let mut occupied_cols = HashSet::new();
-    let mut row = 0;
-    let mut col_width = 0;
+    let mut total = 0;
     for lines in file_contents.lines() {
-        let mut col = 0;
-        let mut empty_row = true;
-        for c in lines.chars() {
-            if c == '#' {
-                galaxies.insert((row, col));
-                occupied_cols.insert(col);
-                empty_row = false;
-            }
-            col += 1;
-        }
-        if empty_row {
-            empty_rows.push(row);
-        }
-        row += 1;
-        col_width = col;
-    }
-    
-    for i in 0..col_width {
-        if !occupied_cols.contains(&i) {
-            empty_cols.push(i);
-        }
-    }
-    
-    println!("Empty Rows: {:?}", empty_rows);
-    println!("Empty Cols: {:?}", empty_cols);
-    println!("Galaxies: {:?}", galaxies);
+        let mut parts = lines.split(" ");
+        let mut springs: Vec<char> = parts.next().unwrap().chars().collect();
+        let checksum: Vec<i8> = parts
+            .next()
+            .unwrap()
+            .split(",")
+            .map(|s| s.parse().unwrap())
+            .collect();
+        let mut memo = HashMap::new();
 
-    let mut total: u64 = 0;
-    let galaxies_vec = Vec::from_iter(galaxies);
-    for i in 0..galaxies_vec.len() - 1 {
-        for j in i+1..galaxies_vec.len() {
-            let (row1, col1) = &galaxies_vec[i];
-            let (row2, col2) = &galaxies_vec[j];
-
-            let low_row = cmp::min(row1, row2);
-            let high_row = cmp::max(row1, row2);
-            let low_col = cmp::min(col1, col2);
-            let high_col = cmp::max(col1, col2);
-
-            let mut local = high_row - low_row + high_col - low_col;
-            for n in &empty_rows {
-                if n < low_row {
-                    continue;
-                }
-                if n < high_row {
-                    local += 999999;
-                }
-                if n > high_row {
-                    break;
-                }
-            }
-            for n in &empty_cols {
-                if n < low_col {
-                    continue;
-                }
-                if n < high_col {
-                    local += 999999;
-                }
-                if n > high_col {
-                    break;
-                }
-            }
-
-            //println!("Local: ({},{}) ({},{}) {}", row1, col1, row2, col2, local);
-            total += local;
+        let mut springs_2 = springs.clone();
+        let mut checksum_2 = checksum.clone();
+        for _ in 0..4 {
+            springs_2.push('?');
+            springs_2.append(&mut springs.clone());
+            checksum_2.append(&mut checksum.clone())
         }
+
+        let valid = count_valid(&mut springs_2, &checksum_2, &mut memo);
+        println!("Valid: {}", valid);
+        total += valid;
     }
 
     println!("Total: {}", total);
 }
+
+fn count_valid(springs: &mut Vec<char>, checksum: &Vec<i8>, memo: &mut HashMap<(Vec<char>, Vec<i8>), u64>) -> u64 {
+    match memo.get(&(springs.clone(), checksum.clone())) {
+        Some(total) => {
+            return *total;
+        },
+        None => ()
+    }
+
+    let mut s_idx = 0;
+    for c_idx in 0..checksum.len() {
+        if s_idx == springs.len() {
+            return 0;
+        }
+
+        while springs[s_idx] == '.' {
+            s_idx = s_idx + 1;
+            if s_idx == springs.len() {
+                return 0;
+            }
+        }
+
+        // can be anything right now
+        if springs[s_idx] == '?' {
+            let mut total = 0;
+
+            springs[s_idx] = '#';
+            let mut small_springs = springs[s_idx..].to_vec();
+            let small_checksum = checksum[c_idx..].to_vec();
+            let subtotal = count_valid(&mut small_springs, &small_checksum, memo);
+            memo.insert((small_springs, small_checksum), subtotal);
+            total += subtotal;
+
+            springs[s_idx] = '.';
+            let mut small_springs = springs[s_idx..].to_vec();
+            let small_checksum = checksum[c_idx..].to_vec();
+            let subtotal = count_valid(&mut small_springs, &small_checksum, memo);
+            memo.insert((small_springs, small_checksum), subtotal);
+            total += subtotal;
+
+            springs[s_idx] = '?';
+            return total;
+        }
+
+        // consume # and ? as if it's a #
+        for _ in 0..checksum[c_idx] {
+            if s_idx == springs.len() {
+                return 0;
+            }
+            if springs[s_idx] == '.' {
+                return 0;
+            }
+            s_idx = s_idx + 1;
+        }
+
+        // consume trailing . (or ?) if available
+        if s_idx < springs.len() {
+            match springs[s_idx] {
+                '?' | '.' => {
+                    s_idx = s_idx + 1;
+                }
+                '#' => {
+                    return 0;
+                }
+                _ => unreachable!()
+            }
+        }
+    }
+
+    while s_idx < springs.len() {
+        if springs[s_idx] == '#' {
+            return 0;
+        }
+        s_idx = s_idx + 1;
+    }
+
+    return 1;
+}
+
