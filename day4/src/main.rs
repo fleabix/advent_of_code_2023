@@ -1,5 +1,5 @@
-use std::{path::Path, fs::File, io::Read, collections::HashSet};
 use nom;
+use std::{collections::HashSet, fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -43,13 +43,13 @@ fn main() {
         i += 1;
     }
 
-    let total : u64 = card_piles.iter().sum();
+    let total: u64 = card_piles.iter().sum();
 
     println!("Total: {}", total)
 }
 
 struct Scratchcards {
-    cards : Vec<Card>
+    cards: Vec<Card>,
 }
 
 impl Scratchcards {
@@ -61,8 +61,8 @@ impl Scratchcards {
 }
 
 struct Card {
-    winning_numbers : Vec<u64>,
-    numbers_on_card : Vec<u64>
+    winning_numbers: Vec<u64>,
+    numbers_on_card: Vec<u64>,
 }
 
 impl Card {

@@ -1,4 +1,4 @@
-use std::{path::Path, fs::File, io::Read, collections::HashSet, cmp};
+use std::{cmp, collections::HashSet, fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -17,7 +17,7 @@ fn main() {
         Err(why) => panic!("couldn't read {}: {}", display, why),
         Ok(_) => (),
     }
-    
+
     let mut galaxies = HashSet::new();
     let mut empty_rows = Vec::new();
     let mut empty_cols = Vec::new();
@@ -42,13 +42,13 @@ fn main() {
         row += 1;
         col_width = col;
     }
-    
+
     for i in 0..col_width {
         if !occupied_cols.contains(&i) {
             empty_cols.push(i);
         }
     }
-    
+
     println!("Empty Rows: {:?}", empty_rows);
     println!("Empty Cols: {:?}", empty_cols);
     println!("Galaxies: {:?}", galaxies);
@@ -56,7 +56,7 @@ fn main() {
     let mut total: u64 = 0;
     let galaxies_vec = Vec::from_iter(galaxies);
     for i in 0..galaxies_vec.len() - 1 {
-        for j in i+1..galaxies_vec.len() {
+        for j in i + 1..galaxies_vec.len() {
             let (row1, col1) = &galaxies_vec[i];
             let (row2, col2) = &galaxies_vec[j];
 

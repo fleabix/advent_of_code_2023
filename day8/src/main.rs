@@ -1,6 +1,6 @@
-use std::{path::Path, fs::File, io::Read, collections::HashMap};
-use nom;
 use gcd::Gcd;
+use nom;
+use std::{collections::HashMap, fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -20,17 +20,21 @@ fn main() {
         Ok(_) => (),
     }
     let input = file_contents.as_str();
-    let (input, directions) = nom::character::complete::alpha1::<&str, nom::error::Error<_>>(input).unwrap();
-    let (input, _) = nom::character::complete::multispace1::<&str, nom::error::Error<_>>(input).unwrap();
-    let (_, nodes) = nom::multi::separated_list1(
-        nom::character::complete::line_ending, 
-        Node::parse
-    )(input).unwrap();
+    let (input, directions) =
+        nom::character::complete::alpha1::<&str, nom::error::Error<_>>(input).unwrap();
+    let (input, _) =
+        nom::character::complete::multispace1::<&str, nom::error::Error<_>>(input).unwrap();
+    let (_, nodes) =
+        nom::multi::separated_list1(nom::character::complete::line_ending, Node::parse)(input)
+            .unwrap();
 
     let directions = directions.chars().collect::<Vec<char>>();
-    let nodes_map: HashMap<_,_> = nodes.iter().map(|n| (&n.id, n)).collect();
+    let nodes_map: HashMap<_, _> = nodes.iter().map(|n| (&n.id, n)).collect();
 
-    let start = nodes.iter().filter(|n| n.id.ends_with("A")).collect::<Vec<&Node>>();
+    let start = nodes
+        .iter()
+        .filter(|n| n.id.ends_with("A"))
+        .collect::<Vec<&Node>>();
 
     let mut factors: Vec<u64> = Vec::new();
     for mut me in start {
@@ -39,7 +43,7 @@ fn main() {
             let next_me = match directions[i % directions.len()] {
                 'L' => &me.left,
                 'R' => &me.right,
-                _ => unreachable!()
+                _ => unreachable!(),
             };
             me = nodes_map[next_me];
             i = i + 1;
@@ -71,9 +75,9 @@ fn main() {
 
 #[derive(Debug)]
 struct Node {
-    id : String,
-    left : String,
-    right : String,
+    id: String,
+    left: String,
+    right: String,
 }
 
 impl Node {
@@ -84,6 +88,13 @@ impl Node {
         let (input, _) = nom::bytes::complete::tag(", ")(input)?;
         let (input, right) = nom::character::complete::alpha1(input)?;
         let (input, _) = nom::bytes::complete::tag(")")(input)?;
-        Ok((input, Self { id: id.to_string(), left: left.to_string(), right: right.to_string() }))
+        Ok((
+            input,
+            Self {
+                id: id.to_string(),
+                left: left.to_string(),
+                right: right.to_string(),
+            },
+        ))
     }
 }

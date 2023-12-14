@@ -1,4 +1,4 @@
-use std::{path::Path, fs::File, io::Read};
+use std::{fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -34,41 +34,35 @@ fn main() {
                     if walls % 2 != 0 {
                         inside += 1;
                     }
-                },
-                '|' => {
-                    match dir {
-                        None => walls += 1,
-                        _ => panic!("pipes bad {:?}", dir)
-                    }
-                },
-                'F' => {
-                    match dir {
-                        None => dir = Some(Directions::Up),
-                        _ => panic!("pipes bad {:?}", dir)
-                    }
-                },
-                'L' => {
-                    match dir {
-                        None => dir = Some(Directions::Down),
-                        _ => panic!("pipes bad {:?}", dir)
-                    }
                 }
+                '|' => match dir {
+                    None => walls += 1,
+                    _ => panic!("pipes bad {:?}", dir),
+                },
+                'F' => match dir {
+                    None => dir = Some(Directions::Up),
+                    _ => panic!("pipes bad {:?}", dir),
+                },
+                'L' => match dir {
+                    None => dir = Some(Directions::Down),
+                    _ => panic!("pipes bad {:?}", dir),
+                },
                 'J' => {
                     match dir {
                         Some(Directions::Up) => walls += 1,
                         Some(Directions::Down) => walls += 2,
-                        _ => panic!("pipes bad {:?}", dir)
+                        _ => panic!("pipes bad {:?}", dir),
                     }
                     dir = None;
-                },
+                }
                 '7' => {
                     match dir {
                         Some(Directions::Down) => walls += 1,
                         Some(Directions::Up) => walls += 2,
-                        _ => panic!("pipes bad {:?}", dir)
+                        _ => panic!("pipes bad {:?}", dir),
                     }
                     dir = None;
-                },
+                }
                 _ => panic!("pipes bad"),
             }
         }

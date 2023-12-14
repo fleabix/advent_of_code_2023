@@ -1,5 +1,5 @@
-use std::{path::Path, fs::File, io::Read};
 use nom::{self, Finish};
+use std::{fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -20,9 +20,13 @@ fn main() {
     }
 
     let (input, seeds) = Seeds::parse(&file_contents).expect("woof");
-    let (input, _) = nom::character::complete::multispace1::<&str, nom::error::Error<_>>(input).finish().unwrap();
+    let (input, _) = nom::character::complete::multispace1::<&str, nom::error::Error<_>>(input)
+        .finish()
+        .unwrap();
 
-    let (_, maps) = nom::multi::separated_list1(nom::character::complete::multispace1, Mapper::parse)(input).unwrap();
+    let (_, maps) =
+        nom::multi::separated_list1(nom::character::complete::multispace1, Mapper::parse)(input)
+            .unwrap();
 
     // let mut minimum = u64::MAX;
     // for (start, len) in seeds.seeds.into_iter().tuples() {
@@ -38,7 +42,10 @@ fn main() {
     let mut ranges = Vec::new();
     let mut i = 0;
     while i < seeds.seeds.len() {
-        ranges.push(Range { start: seeds.seeds[i], len: seeds.seeds[i+1] });
+        ranges.push(Range {
+            start: seeds.seeds[i],
+            len: seeds.seeds[i + 1],
+        });
         i += 2;
     }
 
@@ -53,19 +60,18 @@ fn main() {
     //println!("Seeds: {:?}", seeds);
     //println!("Mappers: {:?}", maps);
     println!("Minimum: {:?}", ranges);
-    println!("Minimum: {}", ranges.iter().map(|a|a.start).min().unwrap());
-
+    println!("Minimum: {}", ranges.iter().map(|a| a.start).min().unwrap());
 }
 
 #[derive(Debug)]
 struct Range {
     start: u64,
-    len: u64
+    len: u64,
 }
 
 #[derive(Debug)]
 struct Seeds {
-    seeds : Vec<u64>
+    seeds: Vec<u64>,
 }
 
 impl Seeds {
@@ -82,8 +88,8 @@ impl Seeds {
 
 #[derive(Debug)]
 struct Mapper {
-    _name : String,
-    conversions : Vec<(u64, u64, u64)>,
+    _name: String,
+    conversions: Vec<(u64, u64, u64)>,
 }
 
 impl Mapper {
@@ -95,23 +101,34 @@ impl Mapper {
         let (input, destination) = nom::character::complete::alpha1(input)?;
         let (input, _) = nom::bytes::complete::tag(" map:")(input)?;
         let (input, _) = nom::character::complete::line_ending(input)?;
-        let (input, mut conversions) =
-            nom::multi::separated_list1(
-                nom::character::complete::line_ending,
-                nom::combinator::map(
-                    nom::sequence::tuple((
-                        nom::sequence::terminated(nom::character::complete::u64, nom::character::complete::space1),
-                        nom::sequence::terminated(nom::character::complete::u64, nom::character::complete::space1),
-                        nom::character::complete::u64
-                    )),
-                |(a, b, c)| (b, a, c)
-                )
-            )(input)?;
+        let (input, mut conversions) = nom::multi::separated_list1(
+            nom::character::complete::line_ending,
+            nom::combinator::map(
+                nom::sequence::tuple((
+                    nom::sequence::terminated(
+                        nom::character::complete::u64,
+                        nom::character::complete::space1,
+                    ),
+                    nom::sequence::terminated(
+                        nom::character::complete::u64,
+                        nom::character::complete::space1,
+                    ),
+                    nom::character::complete::u64,
+                )),
+                |(a, b, c)| (b, a, c),
+            ),
+        )(input)?;
         conversions.sort_by(|a, b| a.0.cmp(&b.0));
-        Ok((input, Self { _name: format!("{} {} {}", source, to, destination) , conversions }))
+        Ok((
+            input,
+            Self {
+                _name: format!("{} {} {}", source, to, destination),
+                conversions,
+            },
+        ))
     }
 
-    fn _map(&self, from : u64) -> u64 {
+    fn _map(&self, from: u64) -> u64 {
         for (src, dst, len) in &self.conversions {
             if from < *src {
                 return from;
@@ -123,19 +140,25 @@ impl Mapper {
         return from;
     }
 
-    fn map_range(&self, from : Range) -> Vec<Range> {
+    fn map_range(&self, from: Range) -> Vec<Range> {
         let mut start = from.start;
-        let end = from.start + from.len;        
+        let end = from.start + from.len;
         let mut new_ranges = Vec::new();
 
         for (src, dst, len) in &self.conversions {
             let marker = *src;
             if start < marker {
                 if end < marker {
-                    new_ranges.push(Range{ start: start, len: end - start });
+                    new_ranges.push(Range {
+                        start: start,
+                        len: end - start,
+                    });
                     return new_ranges;
                 } else {
-                    new_ranges.push(Range{ start: start, len: marker - start });
+                    new_ranges.push(Range {
+                        start: start,
+                        len: marker - start,
+                    });
                     start = marker;
                 }
             }
@@ -143,15 +166,24 @@ impl Mapper {
             let marker = src + len;
             if start < marker {
                 if end < marker {
-                    new_ranges.push(Range{ start: start - src + dst, len: end - start });
+                    new_ranges.push(Range {
+                        start: start - src + dst,
+                        len: end - start,
+                    });
                     return new_ranges;
                 } else {
-                    new_ranges.push(Range{ start: start - src + dst, len: marker - start });
+                    new_ranges.push(Range {
+                        start: start - src + dst,
+                        len: marker - start,
+                    });
                     start = marker;
                 }
             }
         }
-        new_ranges.push(Range{ start: start, len: end - start });
+        new_ranges.push(Range {
+            start: start,
+            len: end - start,
+        });
         return new_ranges;
     }
 }

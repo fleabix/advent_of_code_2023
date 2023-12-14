@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read, path::Path, collections::HashMap};
+use std::{collections::HashMap, fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -46,12 +46,16 @@ fn main() {
     println!("Total: {}", total);
 }
 
-fn count_valid(springs: &mut Vec<char>, checksum: &Vec<i8>, memo: &mut HashMap<(Vec<char>, Vec<i8>), u64>) -> u64 {
+fn count_valid(
+    springs: &mut Vec<char>,
+    checksum: &Vec<i8>,
+    memo: &mut HashMap<(Vec<char>, Vec<i8>), u64>,
+) -> u64 {
     match memo.get(&(springs.clone(), checksum.clone())) {
         Some(total) => {
             return *total;
-        },
-        None => ()
+        }
+        None => (),
     }
 
     let mut s_idx = 0;
@@ -109,7 +113,7 @@ fn count_valid(springs: &mut Vec<char>, checksum: &Vec<i8>, memo: &mut HashMap<(
                 '#' => {
                     return 0;
                 }
-                _ => unreachable!()
+                _ => unreachable!(),
             }
         }
     }
@@ -123,4 +127,3 @@ fn count_valid(springs: &mut Vec<char>, checksum: &Vec<i8>, memo: &mut HashMap<(
 
     return 1;
 }
-

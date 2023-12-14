@@ -1,4 +1,3 @@
-
 // fn main1() {
 //     let tests = vec![(7, 9), (15, 40), (30, 200)];
 //     let inputs = vec![(46, 358), (68, 1054), (98, 1807), (66, 1080)];
@@ -16,7 +15,7 @@
 //         }
 //         results.push(wins);
 //     }
-    
+
 //     println!("Awesome Possum: {}", results.iter().fold(1, |acc, x| acc * x));
 // }
 
@@ -37,8 +36,8 @@ fn main() {
             low = mid + 1;
         }
     }
-    println!("low: {}, {}", low, low * (time - low) > distance );
-    println!("high: {}, {}", high, high * (time - high) > distance );
+    println!("low: {}, {}", low, low * (time - low) > distance);
+    println!("high: {}, {}", high, high * (time - high) > distance);
 
     let start = high;
 
@@ -53,9 +52,9 @@ fn main() {
             high = mid - 1;
         }
     }
-    println!("low: {}, {}", low, low * (time - low) > distance );
-    println!("high: {}, {}", high, high * (time - high) > distance );
-   
+    println!("low: {}, {}", low, low * (time - low) > distance);
+    println!("high: {}, {}", high, high * (time - high) > distance);
+
     let end = high;
     println!("Awesome Possum: {}", end - start);
 }

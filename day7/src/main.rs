@@ -1,5 +1,10 @@
-use std::{path::Path, fs::File, io::Read, cmp::{Ordering, self}};
 use nom;
+use std::{
+    cmp::{self, Ordering},
+    fs::File,
+    io::Read,
+    path::Path,
+};
 
 fn main() {
     // Create a path to the desired file
@@ -20,9 +25,10 @@ fn main() {
     }
 
     let (_, mut games) = nom::multi::separated_list1(
-        nom::character::complete::line_ending, 
-        Game::parse
-    )(&file_contents).unwrap();
+        nom::character::complete::line_ending,
+        Game::parse,
+    )(&file_contents)
+    .unwrap();
 
     games.sort_by(|a, b| a.cmp(&b));
 
@@ -49,9 +55,9 @@ enum HandType {
 
 #[derive(Debug)]
 struct Game {
-    cards : Vec<usize>,
-    bid : u64,
-    hand : HandType,
+    cards: Vec<usize>,
+    bid: u64,
+    hand: HandType,
 }
 
 impl Game {
@@ -59,8 +65,8 @@ impl Game {
         let (input, cards) = nom::combinator::map(
             nom::multi::many1(nom::character::complete::none_of(" ")),
             |v| {
-                v.iter().map(|c| {
-                    match *c {
+                v.iter()
+                    .map(|c| match *c {
                         '2' => 1,
                         '3' => 2,
                         '4' => 3,
@@ -75,49 +81,40 @@ impl Game {
                         'K' => 12,
                         'A' => 13,
                         _ => panic!("what did you give me"),
-                    }
-                }
-            ).collect::<Vec<usize>>()
-            }
+                    })
+                    .collect::<Vec<usize>>()
+            },
         )(input)?;
         let (input, _) = nom::character::complete::multispace1(input)?;
         let (input, bid) = nom::character::complete::u64(input)?;
 
         let mut hand = HandType::HighCard;
-        let mut radix = vec![0u8;14];
+        let mut radix = vec![0u8; 14];
         for n in &cards {
             let n = *n;
             let count = radix[n] + 1;
             radix[n] = count;
             if n != 0 {
                 hand = match count {
-                    2 => {
-                        match hand {
-                            HandType::HighCard => HandType::OnePair,
-                            HandType::OnePair => HandType::TwoPair,
-                            HandType::ThreeOfAKind => HandType::FullHouse,
-                            _ => panic!("lol what hand: {:?}", hand)
-                        }
-                    }
-                    3 => {
-                        match hand {
-                            HandType::OnePair => HandType::ThreeOfAKind,
-                            HandType::TwoPair => HandType::FullHouse,
-                            _ => panic!("lol what hand: {:?}", hand)
-                        }
-                    }
-                    4 => {
-                        match hand {
-                            HandType::ThreeOfAKind => HandType::FourOfAKind,
-                            _ => panic!("lol what hand: {:?}", hand)
-                        }
-                    }
-                    5 => {
-                        match hand {
-                            HandType::FourOfAKind => HandType::FiveOfAKind,
-                            _ => panic!("lol what hand: {:?}", hand)
-                        }
-                    }
+                    2 => match hand {
+                        HandType::HighCard => HandType::OnePair,
+                        HandType::OnePair => HandType::TwoPair,
+                        HandType::ThreeOfAKind => HandType::FullHouse,
+                        _ => panic!("lol what hand: {:?}", hand),
+                    },
+                    3 => match hand {
+                        HandType::OnePair => HandType::ThreeOfAKind,
+                        HandType::TwoPair => HandType::FullHouse,
+                        _ => panic!("lol what hand: {:?}", hand),
+                    },
+                    4 => match hand {
+                        HandType::ThreeOfAKind => HandType::FourOfAKind,
+                        _ => panic!("lol what hand: {:?}", hand),
+                    },
+                    5 => match hand {
+                        HandType::FourOfAKind => HandType::FiveOfAKind,
+                        _ => panic!("lol what hand: {:?}", hand),
+                    },
                     _ => hand,
                 };
             }
@@ -128,37 +125,35 @@ impl Game {
             let n = radix[i];
             highest = cmp::max(highest, n);
         }
-        println!("Hand: {:13} Highest: {}, J: {}, Cards: {:?}", format!("{:?}", hand), highest, radix[0], cards);
+        println!(
+            "Hand: {:13} Highest: {}, J: {}, Cards: {:?}",
+            format!("{:?}", hand),
+            highest,
+            radix[0],
+            cards
+        );
         for i in 0..radix[0] {
             let count = highest + i + 1;
             hand = match count {
-                2 => {
-                    match hand {
-                        HandType::HighCard => HandType::OnePair,
-                        HandType::OnePair => HandType::TwoPair,
-                        HandType::ThreeOfAKind => HandType::FullHouse,
-                        _ => panic!("lol what hand: {:?}", hand)
-                    }
-                }
-                3 => {
-                    match hand {
-                        HandType::OnePair => HandType::ThreeOfAKind,
-                        HandType::TwoPair => HandType::FullHouse,
-                        _ => panic!("lol what hand: {:?}", hand)
-                    }
-                }
-                4 => {
-                    match hand {
-                        HandType::ThreeOfAKind => HandType::FourOfAKind,
-                        _ => panic!("lol what hand: {:?}", hand)
-                    }
-                }
-                5 => {
-                    match hand {
-                        HandType::FourOfAKind => HandType::FiveOfAKind,
-                        _ => panic!("lol what hand: {:?}", hand)
-                    }
-                }
+                2 => match hand {
+                    HandType::HighCard => HandType::OnePair,
+                    HandType::OnePair => HandType::TwoPair,
+                    HandType::ThreeOfAKind => HandType::FullHouse,
+                    _ => panic!("lol what hand: {:?}", hand),
+                },
+                3 => match hand {
+                    HandType::OnePair => HandType::ThreeOfAKind,
+                    HandType::TwoPair => HandType::FullHouse,
+                    _ => panic!("lol what hand: {:?}", hand),
+                },
+                4 => match hand {
+                    HandType::ThreeOfAKind => HandType::FourOfAKind,
+                    _ => panic!("lol what hand: {:?}", hand),
+                },
+                5 => match hand {
+                    HandType::FourOfAKind => HandType::FiveOfAKind,
+                    _ => panic!("lol what hand: {:?}", hand),
+                },
                 _ => hand,
             };
         }

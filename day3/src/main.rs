@@ -1,4 +1,10 @@
-use std::{path::Path, fs::File, io::Read, collections::{HashSet, HashMap}, cmp};
+use std::{
+    cmp,
+    collections::{HashMap, HashSet},
+    fs::File,
+    io::Read,
+    path::Path,
+};
 
 fn main() {
     // Create a path to the desired file
@@ -31,13 +37,20 @@ fn main() {
                 '0'..='9' => {
                     let n: i32 = c.to_digit(10).unwrap().try_into().unwrap();
                     match parsed_part {
-                        None => parsed_part = Some(PartNumber { x: x, y: y, len: 0, value: n }),
+                        None => {
+                            parsed_part = Some(PartNumber {
+                                x: x,
+                                y: y,
+                                len: 0,
+                                value: n,
+                            })
+                        }
                         Some(ref mut part) => {
                             part.len = part.len + 1;
                             part.value = part.value * 10 + n;
                         }
                     }
-                } 
+                }
                 _ => {
                     if parsed_part.is_some() {
                         parts.push(parsed_part.unwrap());
@@ -59,9 +72,9 @@ fn main() {
     let mut gears: HashMap<(i32, i32), Vec<i32>> = HashMap::new();
     for part in &parts {
         let min_x = cmp::max(part.x - 1, 0);
-        let max_x = cmp::min(part.x + part.len + 1, x-1);
+        let max_x = cmp::min(part.x + part.len + 1, x - 1);
         let min_y = cmp::max(part.y - 1, 0);
-        let max_y = cmp::min(part.y + 1, y-1);
+        let max_y = cmp::min(part.y + 1, y - 1);
 
         // println!("x: {} {}, y: {} {}, v: {}", min_x, max_x, min_y, max_y, part.value);
 
@@ -103,5 +116,5 @@ struct PartNumber {
     x: i32,
     y: i32,
     len: i32,
-    value: i32
+    value: i32,
 }

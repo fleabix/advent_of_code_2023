@@ -1,5 +1,5 @@
-use std::{path::Path, fs::File, io::Read};
 use nom;
+use std::{fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -20,12 +20,13 @@ fn main() {
     }
     let input = file_contents.as_str();
     let (_, readings) = nom::multi::separated_list1(
-        nom::character::complete::line_ending::<&str, nom::error::Error<_>>, 
+        nom::character::complete::line_ending::<&str, nom::error::Error<_>>,
         nom::multi::separated_list1(
             nom::character::complete::space1,
-            nom::character::complete::i64
-        )
-    )(input).unwrap();
+            nom::character::complete::i64,
+        ),
+    )(input)
+    .unwrap();
 
     let mut total = 0;
     for mut line in readings {
@@ -34,8 +35,8 @@ fn main() {
         loop {
             let mut all_zero: bool = true;
             let mut next_line = Vec::new();
-            for i in 0..line.len()-1 {
-                let v = line[i+1] - line[i];
+            for i in 0..line.len() - 1 {
+                let v = line[i + 1] - line[i];
                 next_line.push(v);
                 if v != 0 {
                     all_zero = false;
@@ -50,13 +51,13 @@ fn main() {
 
         for i in (1..pyramid.len()).rev() {
             let src = pyramid[i][0];
-            let dst = &mut pyramid[i-1];
+            let dst = &mut pyramid[i - 1];
             dst.insert(0, dst[0] - src);
         }
 
         //println!("Pyramid: {:?}", pyramid);
         total += pyramid.first().unwrap().first().unwrap();
     }
-    
+
     println!("Total: {}", total);
 }

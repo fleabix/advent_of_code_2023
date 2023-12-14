@@ -1,4 +1,4 @@
-use std::{path::Path, fs::File, io::Read, cmp};
+use std::{cmp, fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -18,29 +18,32 @@ fn main() {
         Ok(_) => (), //print!("{} contains:\n{}", display, s),
     }
 
-    let total : u32 = s.lines().map(|line| {
-        let mut section = line.split(":");
-        let _game_num : u32 = section.next().unwrap()[5..].parse::<u32>().unwrap();
-        
-        let mut blue = 0u32;
-        let mut red = 0u32;
-        let mut green = 0u32;
-        for grab in section.next().unwrap().split(";") {
-            for ball in grab.split(",") {
-                if ball.ends_with("blue") {
-                    let n = ball[..ball.len()-5].trim().parse::<u32>().unwrap();
-                    blue = cmp::max(blue, n);
-                } else if ball.trim().ends_with("red") {
-                    let n = ball[..ball.len()-4].trim().parse::<u32>().unwrap();
-                    red = cmp::max(red, n);
-                } else if ball.trim().ends_with("green") {
-                    let n = ball[..ball.len()-6].trim().parse::<u32>().unwrap();
-                    green = cmp::max(green, n);
+    let total: u32 = s
+        .lines()
+        .map(|line| {
+            let mut section = line.split(":");
+            let _game_num: u32 = section.next().unwrap()[5..].parse::<u32>().unwrap();
+
+            let mut blue = 0u32;
+            let mut red = 0u32;
+            let mut green = 0u32;
+            for grab in section.next().unwrap().split(";") {
+                for ball in grab.split(",") {
+                    if ball.ends_with("blue") {
+                        let n = ball[..ball.len() - 5].trim().parse::<u32>().unwrap();
+                        blue = cmp::max(blue, n);
+                    } else if ball.trim().ends_with("red") {
+                        let n = ball[..ball.len() - 4].trim().parse::<u32>().unwrap();
+                        red = cmp::max(red, n);
+                    } else if ball.trim().ends_with("green") {
+                        let n = ball[..ball.len() - 6].trim().parse::<u32>().unwrap();
+                        green = cmp::max(green, n);
+                    }
                 }
             }
-        }
-        blue * red * green
-    }).sum();
+            blue * red * green
+        })
+        .sum();
 
     println!("Total: {}", total);
 }
