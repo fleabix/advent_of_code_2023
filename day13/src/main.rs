@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::File, io::Read, path::Path};
+use std::{fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -24,7 +24,7 @@ fn main() {
     for board in boards {
         let mut row_sum = Vec::new();
         let mut col_sum = vec![0u32; board.lines().next().unwrap().len()];
-        'next_board: for line in board.lines() {
+        for line in board.lines() {
             row_sum.push(
                 line
                     .chars()
@@ -84,7 +84,7 @@ fn main() {
         }
         for i in 0..col_sum.len() - 1 {
             let mut smudge = None;
-            for k in (0..=i) {
+            for k in 0..=i {
                 if i + 1 + k == col_sum.len() {
                     break;
                 }

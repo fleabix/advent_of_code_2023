@@ -21,7 +21,7 @@ fn main() {
     let mut total = 0;
     for lines in file_contents.lines() {
         let mut parts = lines.split(" ");
-        let mut springs: Vec<char> = parts.next().unwrap().chars().collect();
+        let springs: Vec<char> = parts.next().unwrap().chars().collect();
         let checksum: Vec<i8> = parts
             .next()
             .unwrap()
@@ -39,7 +39,7 @@ fn main() {
         }
 
         let valid = count_valid(&mut springs_2, &checksum_2, &mut memo);
-        println!("Valid: {}", valid);
+        //println!("Valid: {}", valid);
         total += valid;
     }
 

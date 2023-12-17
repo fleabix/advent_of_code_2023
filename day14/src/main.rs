@@ -201,7 +201,7 @@ fn main() {
 
     let launder = (1000000000 - cycle_start - 1) % cycle_period;
 
-    for c in 0..launder {
+    for _ in 0..launder {
         // North
         for col in 0..rows[0].len() {
             let mut space = None;
