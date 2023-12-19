@@ -22,17 +22,23 @@ fn main() {
     let mut row = 0;
     let mut col = 0;
     for line in file_contents.lines() {
-        let mut split = line.split(' ');
-        let dir = split.next().unwrap();
-        let length = split.next().unwrap().parse::<i64>().unwrap();
-        match dir {
-            "R" => {
+        let mut splits = line.split(' ');
+        splits.next();
+        splits.next();
+        let chars_iter: Vec<char> = splits.next().unwrap().chars().skip(2).collect();
+        
+        let mut length: i64 = 0;
+        for i in 0..5 {
+            length = length * 16 + chars_iter[i].to_digit(16).unwrap() as i64;
+        }
+        match chars_iter[5] {
+            '0' => {
                 col = col + length;
             },
-            "L" => {
+            '2' => {
                 col = col - length;
             },
-            "U" => {
+            '3' => {
                 let new_row = row - length;
                 spans.push(Span{
                     col,
@@ -41,7 +47,7 @@ fn main() {
                 });
                 row = new_row;
             },
-            "D" => {
+            '1' => {
                 let new_row = row + length;
                 spans.push(Span {
                     col, 
@@ -79,12 +85,12 @@ fn main() {
             let span = min_heap_consume.pop().unwrap();
             if inside || wall {
                 let v = span.col - start - 1;
-                print!("{v} ");
+                //print!("{v} ");
                 total += v;
             }
 
             total = total + 1;
-            print!("1 ");
+            //print!("1 ");
             if scanline > span.row_start && scanline < span.row_end {
                 inside = !inside;
                 assert!(wall == false);
@@ -96,12 +102,12 @@ fn main() {
             }
             start = span.col;
         }
-        println!();
+        //println!();
 
         scanline = scanline + 1;
     }
 
-    println!("Part 1: {}", total);
+    println!("Part 2: {}", total);
 }
 
 
