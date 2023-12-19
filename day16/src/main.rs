@@ -18,19 +18,22 @@ fn main() {
         Ok(_) => (),
     }
 
-    let mut rows: Vec<Vec<u8>> = file_contents.lines().map(|line| {
-        line.chars().map(|c| {
-            match c {
-                '.' => Tile::Space as u8,
-                '\\' => Tile::Backslash as u8,
-                '/' => Tile::Slash as u8,
-                '|' => Tile::Pipe as u8,
-                '-' => Tile::Dash as u8,
-                _ => unreachable!(),
-            }
-        }).collect()
-    }).collect();
-    
+    let rows: Vec<Vec<u8>> = file_contents
+        .lines()
+        .map(|line| {
+            line.chars()
+                .map(|c| match c {
+                    '.' => Tile::Space as u8,
+                    '\\' => Tile::Backslash as u8,
+                    '/' => Tile::Slash as u8,
+                    '|' => Tile::Pipe as u8,
+                    '-' => Tile::Dash as u8,
+                    _ => unreachable!(),
+                })
+                .collect()
+        })
+        .collect();
+
     // let mut total = 0;
     // let row = 0;
     // let col = 0;
@@ -102,7 +105,7 @@ fn main() {
         }
         if subtotal > grand_total {
             grand_total = subtotal;
-        } 
+        }
     }
 
     for col in 0..rows[0].len() {
@@ -121,7 +124,7 @@ fn main() {
         }
         if subtotal > grand_total {
             grand_total = subtotal;
-        } 
+        }
     }
 
     println!("Part 2: {}", grand_total);
@@ -148,42 +151,34 @@ fn beam(mut row: isize, mut col: isize, mut direction: Direction, rows: &mut Vec
         let tile = Tile::from(tile);
         direction = match tile {
             Tile::Space => direction,
-            Tile::Backslash => {
-                match direction {
-                    Direction::Up => Direction::Left,
-                    Direction::Down => Direction::Right,
-                    Direction::Left => Direction::Up,
-                    Direction::Right => Direction::Down,
+            Tile::Backslash => match direction {
+                Direction::Up => Direction::Left,
+                Direction::Down => Direction::Right,
+                Direction::Left => Direction::Up,
+                Direction::Right => Direction::Down,
+            },
+            Tile::Slash => match direction {
+                Direction::Up => Direction::Right,
+                Direction::Down => Direction::Left,
+                Direction::Left => Direction::Down,
+                Direction::Right => Direction::Up,
+            },
+            Tile::Pipe => match direction {
+                Direction::Up | Direction::Down => direction,
+                Direction::Left | Direction::Right => {
+                    let (new_row, new_col) = Direction::Up.next(row, col);
+                    beam(new_row, new_col, Direction::Up, rows);
+                    Direction::Down
                 }
             },
-            Tile::Slash => {
-                match direction {
-                    Direction::Up => Direction::Right,
-                    Direction::Down => Direction::Left,
-                    Direction::Left => Direction::Down,
-                    Direction::Right => Direction::Up,
+            Tile::Dash => match direction {
+                Direction::Up | Direction::Down => {
+                    let (new_row, new_col) = Direction::Right.next(row, col);
+                    beam(new_row, new_col, Direction::Right, rows);
+                    Direction::Left
                 }
+                Direction::Left | Direction::Right => direction,
             },
-            Tile::Pipe => {
-                match direction {
-                    Direction::Up | Direction::Down => direction,
-                    Direction::Left | Direction::Right => {
-                        let (new_row, new_col) = Direction::Up.next(row, col);
-                        beam(new_row, new_col, Direction::Up, rows);
-                        Direction::Down
-                    }
-                }
-            },
-            Tile::Dash => {
-                match direction {
-                    Direction::Up | Direction::Down => {
-                        let (new_row, new_col) = Direction::Right.next(row, col);
-                        beam(new_row, new_col, Direction::Right, rows);
-                        Direction::Left
-                    },
-                    Direction::Left | Direction::Right => direction
-                }
-            }
         };
         (row, col) = direction.next(row, col);
     }
@@ -205,7 +200,7 @@ impl From<u8> for Tile {
             2 => Tile::Slash,
             3 => Tile::Pipe,
             4 => Tile::Dash,
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 }
@@ -232,5 +227,4 @@ impl Direction {
             Direction::Right => (row, col + 1),
         }
     }
-
 }

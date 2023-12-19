@@ -37,15 +37,6 @@ fn main() {
             heat: 0,
         },
     );
-    queue.push(
-        Block {
-            row: 0,
-            col: 0,
-            dir: Direction::Down,
-            dir_n: 0,
-            heat: 0,
-        },
-    );
 
     let row_max = rows.len() as isize;
     let col_max = rows[0].len() as isize;
@@ -53,7 +44,7 @@ fn main() {
     let mut visited = HashSet::new();
     while !queue.is_empty() {
         let block = queue.pop().unwrap();
-        if block.row == row_max - 1 && block.col == col_max - 1 && block.dir_n >= 4{
+        if block.row == row_max - 1 && block.col == col_max - 1 {
             total = block.heat;
             break;
         }
@@ -84,10 +75,7 @@ fn main() {
             } else {
                 1
             };
-            if new_dir_n > 10 {
-                continue;
-            }
-            if new_dir != block.dir && block.dir_n < 4 {
+            if new_dir_n > 3 {
                 continue;
             }
             let new_heat = block.heat + rows[new_row as usize][new_col as usize] as u64;

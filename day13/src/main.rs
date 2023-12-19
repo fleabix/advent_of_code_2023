@@ -26,23 +26,24 @@ fn main() {
         let mut col_sum = vec![0u32; board.lines().next().unwrap().len()];
         for line in board.lines() {
             row_sum.push(
-                line
-                    .chars()
+                line.chars()
                     .map(|c| match c {
                         '#' => 1u32,
                         _ => 0u32,
                     })
                     .fold(0, |acc, x| acc * 2 + x),
             );
-    
+
             let mut i = 0;
-            line.chars().map(|c| match c {
-                '#' => 1u32,
-                _ => 0u32,
-            }).for_each(|n| {
-                col_sum[i] = col_sum[i] * 2 + n;
-                i = i + 1;
-            });
+            line.chars()
+                .map(|c| match c {
+                    '#' => 1u32,
+                    _ => 0u32,
+                })
+                .for_each(|n| {
+                    col_sum[i] = col_sum[i] * 2 + n;
+                    i = i + 1;
+                });
         }
 
         //println!("Board: {:?} {:?}", row_sum, col_sum);
@@ -54,17 +55,17 @@ fn main() {
                 if i + 1 + k == row_sum.len() {
                     break;
                 }
-                if row_sum[i-k] != row_sum[i + 1 + k] {
+                if row_sum[i - k] != row_sum[i + 1 + k] {
                     match smudge {
                         Some(_) => {
                             smudge = None;
                             break;
                         }
                         None => {
-                            let xor = row_sum[i-k] ^ row_sum[i + 1 + k];
+                            let xor = row_sum[i - k] ^ row_sum[i + 1 + k];
                             if xor & (xor - 1) == 0 {
                                 smudge = Some(i);
-                                println!("Smudge {} {}", i, i-k);
+                                println!("Smudge {} {}", i, i - k);
                             } else {
                                 break;
                             }
@@ -88,17 +89,17 @@ fn main() {
                 if i + 1 + k == col_sum.len() {
                     break;
                 }
-                if col_sum[i-k] != col_sum[i + 1 + k] {
+                if col_sum[i - k] != col_sum[i + 1 + k] {
                     match smudge {
                         Some(_) => {
                             smudge = None;
                             break;
                         }
                         None => {
-                            let xor = col_sum[i-k] ^ col_sum[i + 1 + k];
+                            let xor = col_sum[i - k] ^ col_sum[i + 1 + k];
                             if xor & (xor - 1) == 0 {
                                 smudge = Some(i);
-                                println!("Smudge {} {}", i, i-k);
+                                println!("Smudge {} {}", i, i - k);
                             } else {
                                 break;
                             }
@@ -117,7 +118,6 @@ fn main() {
             println!("Unfounded: {:#?}", board);
         }
     }
-    
+
     println!("Total: {}", total);
 }
-

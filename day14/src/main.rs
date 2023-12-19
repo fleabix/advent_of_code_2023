@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read, path::Path, collections::HashMap};
+use std::{collections::HashMap, fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -37,20 +37,17 @@ fn main() {
                     }
                 }
                 'O' => {
-                    let rock_weight =
-                    match space {
+                    let rock_weight = match space {
                         Some(n) => {
                             space = Some(n + 1);
                             rows.len() - n
-                        },
-                        None => {
-                            rows.len() - row
                         }
+                        None => rows.len() - row,
                     };
                     column_weight += rock_weight;
                 }
                 _ => unreachable!(),
-            } 
+            }
         }
         total += column_weight;
     }
@@ -61,7 +58,7 @@ fn main() {
     let cycles = 1000;
     let mut cycle_start = 0;
     let mut cycle_period = 0;
-    for c in 0.. cycles {
+    for c in 0..cycles {
         // North
         for col in 0..rows[0].len() {
             let mut space = None;
@@ -84,7 +81,7 @@ fn main() {
                         };
                     }
                     _ => unreachable!(),
-                } 
+                }
             }
         }
 
@@ -110,7 +107,7 @@ fn main() {
                         };
                     }
                     _ => unreachable!(),
-                } 
+                }
             }
         }
 
@@ -136,7 +133,7 @@ fn main() {
                         };
                     }
                     _ => unreachable!(),
-                } 
+                }
             }
         }
 
@@ -162,7 +159,7 @@ fn main() {
                         };
                     }
                     _ => unreachable!(),
-                } 
+                }
             }
         }
 
@@ -184,7 +181,7 @@ fn main() {
                         column_weight += rock_weight;
                     }
                     _ => (),
-                } 
+                }
             }
             total += column_weight;
         }
@@ -224,7 +221,7 @@ fn main() {
                         };
                     }
                     _ => unreachable!(),
-                } 
+                }
             }
         }
 
@@ -250,7 +247,7 @@ fn main() {
                         };
                     }
                     _ => unreachable!(),
-                } 
+                }
             }
         }
 
@@ -276,7 +273,7 @@ fn main() {
                         };
                     }
                     _ => unreachable!(),
-                } 
+                }
             }
         }
 
@@ -302,7 +299,7 @@ fn main() {
                         };
                     }
                     _ => unreachable!(),
-                } 
+                }
             }
         }
     }
@@ -318,7 +315,7 @@ fn main() {
                     column_weight += rock_weight;
                 }
                 _ => (),
-            } 
+            }
         }
         total += column_weight;
     }
