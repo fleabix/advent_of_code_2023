@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read, path::Path, collections::BinaryHeap};
+use std::{collections::BinaryHeap, fs::File, io::Read, path::Path};
 
 fn main() {
     // Create a path to the desired file
@@ -26,7 +26,7 @@ fn main() {
         splits.next();
         splits.next();
         let chars_iter: Vec<char> = splits.next().unwrap().chars().skip(2).collect();
-        
+
         let mut length: i64 = 0;
         for i in 0..5 {
             length = length * 16 + chars_iter[i].to_digit(16).unwrap() as i64;
@@ -34,34 +34,34 @@ fn main() {
         match chars_iter[5] {
             '0' => {
                 col = col + length;
-            },
+            }
             '2' => {
                 col = col - length;
-            },
+            }
             '3' => {
                 let new_row = row - length;
-                spans.push(Span{
+                spans.push(Span {
                     col,
                     row_start: new_row,
-                    row_end: row
+                    row_end: row,
                 });
                 row = new_row;
-            },
+            }
             '1' => {
                 let new_row = row + length;
                 spans.push(Span {
-                    col, 
+                    col,
                     row_start: row,
-                    row_end: new_row
+                    row_end: new_row,
                 });
                 row = new_row;
-            },
+            }
             _ => unreachable!(),
         }
     }
 
     spans.sort_by(|a, b| a.row_start.cmp(&b.row_start));
-    
+
     let mut total = 0;
     let mut min_heap = BinaryHeap::new();
 
@@ -109,7 +109,6 @@ fn main() {
 
     println!("Part 2: {}", total);
 }
-
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 struct Span {
