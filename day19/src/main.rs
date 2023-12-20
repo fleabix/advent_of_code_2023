@@ -1,8 +1,8 @@
-use std::{fs::File, io::Read, path::Path};
+use std::{collections::HashMap, fs::File, io::Read, path::Path, cmp, env::join_paths};
 
 fn main() {
     // Create a path to the desired file
-    let path = Path::new("test.txt");
+    let path = Path::new("input.txt");
     let display = path.display();
 
     // Open the path in read-only mode, returns `io::Result<File>`
@@ -33,8 +33,138 @@ fn main() {
         nom::multi::separated_list1(nom::character::complete::line_ending, Part::parse)(input)
             .unwrap();
 
-    println!("{:#?}", workflows);
-    println!("{:#?}", parts);
+    let mut workflows_table = HashMap::new();
+    for workflow in workflows {
+        workflows_table.insert(workflow.name.clone(), workflow);
+    }
+
+    let mut ranges = [(1, 4000); 4];
+    let part2 = sum_workflow_accept(&mut ranges, "in", &workflows_table);
+    println!("Part 2: {part2}");
+
+    let mut accepted_parts = Vec::new();
+    for part in &parts {
+        let mut current_flow = "in";
+        loop {
+            let workflow = &workflows_table[current_flow];
+            for rule in &workflow.rules {
+                let value = match rule.category {
+                    'x' => part.x,
+                    'm' => part.m,
+                    'a' => part.a,
+                    's' => part.s,
+                    '_' => {
+                        current_flow = &rule.target;
+                        break;
+                    }
+                    _ => unreachable!(),
+                };
+
+                if (rule.gt && value > rule.value) || (!rule.gt && value < rule.value) {
+                    current_flow = &rule.target;
+                    break;
+                }
+            }
+            match current_flow {
+                "A" | "R" => {
+                    if current_flow == "A" {
+                        accepted_parts.push(part);
+                    }
+                    break;
+                }
+                _ => (),
+            }
+        }
+    }
+
+    let mut part1 = 0;
+    for part in accepted_parts {
+        let subtotal = part.x + part.m + part.a + part.s;
+        part1 = part1 + subtotal;
+    }
+
+    println!("Part 1: {}", part1);
+}
+
+fn sum_workflow_accept(
+    ranges: &mut [(u64, u64); 4],
+    wf: &str,
+    workflows: &HashMap<String, Workflow>,
+) -> u64 {
+    if wf == "A" {
+        let mut subtotal = 1u64;
+        for (low, high) in ranges {
+            print!("({low} {high}) ");
+            subtotal = subtotal * (*high - *low + 1) as u64;
+        }
+        println!();
+        return subtotal;
+    } else if wf == "R" {
+        return 0;
+    }
+    
+    let mut total = 0;
+    let workflow = &workflows[wf];
+    for rule in &workflow.rules {
+        let i = match rule.category {
+            'x' => 0,
+            'm' => 1,
+            'a' => 2,
+            's' => 3,
+            '_' => {
+                let mut new_ranges = ranges.clone();
+                total += sum_workflow_accept(&mut new_ranges, &rule.target, workflows);
+                continue;
+            },
+            _ => unreachable!(),
+        };
+
+        let low = cmp::max(rule.value, ranges[i].0);
+        let high = cmp::min(rule.value, ranges[i].1);
+
+        // accept block is high block, lower block include
+        if rule.gt {
+            if low <= ranges[i].1 {
+                let mut new_ranges = ranges.clone();
+                new_ranges[i].0 = low + 1;
+                println!("Pass Rule: {} {} {}", rule.value, ranges[i].0, ranges[i].1);
+
+                total += sum_workflow_accept(&mut new_ranges, &rule.target, workflows);
+            } else {
+                println!("Pass Filtered All: {} {} {}", rule.value, ranges[i].0, ranges[i].0);
+            }
+            if high >= ranges[i].0 {
+                ranges[i].1 = high;
+                println!("Fail Rule: {} {} {}", rule.value, ranges[i].0, ranges[i].1);
+                continue;
+            } else {
+                println!("Fail Filtered All: {} {} {}", rule.value, ranges[i].0, ranges[i].0);
+
+                break;
+            }
+        } else {
+            if high >= ranges[i].0 {
+                let mut new_ranges = ranges.clone();
+                new_ranges[i].1 = high - 1;
+                println!("Pass Rule: {} {} {}", rule.value, ranges[i].0, ranges[i].1);
+
+                total += sum_workflow_accept(&mut new_ranges, &rule.target, workflows);
+            } else {
+                println!("Pass Filtered All: {} {} {}", rule.value, ranges[i].0, ranges[i].0);
+
+            }
+            if low <= ranges[i].1 {
+                ranges[i].0 = low;
+                println!("Fail Rule: {} {} {}", rule.value, ranges[i].0, ranges[i].1);
+
+                continue;
+            } else {
+                println!("Fail Filtered All: {} {} {}", rule.value, ranges[i].0, ranges[i].0);
+                break;
+            }
+        }
+    }
+    total
 }
 
 #[derive(Debug)]
