@@ -1,4 +1,4 @@
-use std::{collections::HashMap, fs::File, io::Read, path::Path, cmp, env::join_paths};
+use std::{collections::HashMap, fs::File, io::Read, path::Path, cmp};
 
 fn main() {
     // Create a path to the desired file
