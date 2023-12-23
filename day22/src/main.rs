@@ -1,4 +1,4 @@
-use std::{fs::File, io::Read, path::Path, cmp, collections::{HashSet, HashMap}};
+use std::{fs::File, io::Read, path::Path, cmp, collections::{HashSet, HashMap, VecDeque}, env::join_paths};
 
 fn main() {
     // Create a path to the desired file
@@ -85,8 +85,33 @@ fn main() {
             part1 = part1 + 1;
         }
     }
-
     println!("Part 1: {}", part1);
+
+    let mut part2 = 0;
+    let mut block_queue = VecDeque::new();
+    for block_id in blocks_map.keys() {
+        let mut fallen_blocks = HashSet::from([block_id]);
+
+        //println!("Checking: {}", block_id);
+        block_queue.push_back(block_id);
+        while let Some(current_block) = block_queue.pop_front() {
+            for blocks_to_check in &supports_map[current_block] {
+                let mut stable = false;
+                for dependency in &blocks_map[blocks_to_check].sits_on_top_of {
+                    if !fallen_blocks.contains(dependency) {
+                        stable = true;
+                    }
+                }
+                if stable == false {
+                    //println!("Broke: {}", blocks_to_check);
+                    fallen_blocks.insert(blocks_to_check);
+                    block_queue.push_back(blocks_to_check);
+                }
+            }
+        }
+        part2 = part2 + fallen_blocks.len() - 1;
+    }
+    println!("Part 2: {}", part2);
 }
 
 #[derive(Debug)]
