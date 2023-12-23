@@ -1,10 +1,8 @@
 use std::{
-    cmp,
     collections::{HashMap, HashSet, VecDeque},
-    env::join_paths,
     fs::File,
     io::Read,
-    path::Path,
+    path::Path, cmp,
 };
 
 fn main() {
@@ -29,24 +27,25 @@ fn main() {
     let mut visited = HashSet::new();
 
     let mut search_queue = VecDeque::new();
-    search_queue.push_front((0, 1, 0));
+    search_queue.push_front((0, 1, 0, 0, 1));
 
     let row_max: isize = grid.len() as isize;
     let col_max: isize = grid[0].len() as isize;
-    let mut part1 = 0;
 
-    while let Some((row, col, steps)) = search_queue.pop_front() {
+    let mut nodes_map = HashMap::new();
+    nodes_map.insert((0, 1), HashMap::new());
+
+    while let Some((row, col, mut steps, mut from_node_row, mut from_node_col)) = search_queue.pop_front() {
         if visited.contains(&(row, col)) {
             visited.remove(&(row, col));
             continue;
         }
 
-        if row as isize == row_max - 1 {
-            part1 = cmp::max(part1, steps);
-        }
-
         visited.insert((row, col));
-        search_queue.push_front((row, col, steps));
+        search_queue.push_front((row, col, steps, from_node_row, from_node_col));
+
+        let mut paths = Vec::new();
+        let mut eligibles = 0;
         for new_dir in [Direction::Left, Direction::Right, Direction::Up, Direction::Down] {
             let (next_row, next_col) = new_dir.next(row as isize, col as isize);
             if next_row < 0 || next_col < 0 || next_row >= row_max || next_col >= col_max {
@@ -58,16 +57,64 @@ fn main() {
             }
             match Direction::from(grid[next_row][next_col]) {
                 Direction::None => continue,
-                Direction::Any => (),
-                //d if d != new_dir => continue,
-                _ => (),
+                d => {
+                    eligibles = eligibles + 1;
+                    if d == Direction::Any || d == new_dir {
+                        paths.push((next_row, next_col));
+                    }
+                },
             }
+        }
 
-            search_queue.push_front((next_row, next_col, steps + 1));
+        if eligibles > 1 || row as isize == row_max - 1 {
+            let coord = (row, col);
+            let paths = match nodes_map.get_mut(&coord) {
+                Some(p) => p,
+                None => {
+                    let new_path = HashMap::new();
+                    nodes_map.insert(coord.clone(), new_path);
+                    nodes_map.get_mut(&coord).unwrap()
+                }
+            };
+            paths.insert((from_node_row, from_node_col), steps);
+            nodes_map.get_mut(&(from_node_row, from_node_col)).unwrap().insert(coord, steps);
+
+            steps = 0;
+            from_node_row = row;
+            from_node_col = col;
+        }
+
+        for (new_row, new_col) in paths {
+            search_queue.push_front((new_row, new_col, steps + 1, from_node_row, from_node_col));
         }
     }
-    println!("Part 1: {}", part1);
 
+    let mut part2 = 0;
+    search_queue.push_front((0, 1, 0, 0, 1));
+    while let Some((row, col, steps, _, _)) = search_queue.pop_front() {
+        if visited.contains(&(row, col)) {
+            visited.remove(&(row, col));
+            continue;
+        }
+
+        if row as isize == row_max - 1 {
+            part2 = cmp::max(part2, steps);
+            continue;
+        }
+        visited.insert((row, col));
+        search_queue.push_front((row, col, steps, 0, 0));
+
+        let mut paths_sort: Vec<(&(usize, usize), &u32)> = nodes_map[&(row, col)].iter().collect();
+        paths_sort.sort_by(|(_, a),(_,b)| b.cmp(a));
+
+        for ((dst_row, dst_col), inc_steps) in paths_sort {
+            let coord = (*dst_row, *dst_col);
+            if !visited.contains(&coord) {
+                search_queue.push_front((coord.0, coord.1, steps + inc_steps, 0, 0));
+            }
+        }
+    }
+    println!("Part 2: {}", part2);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
