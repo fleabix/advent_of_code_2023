@@ -1,8 +1,8 @@
-use std::{fs::File, io::Read, path::Path, cmp, collections::HashSet};
+use std::{fs::File, io::Read, path::Path, cmp, collections::{HashSet, HashMap}};
 
 fn main() {
     // Create a path to the desired file
-    let path = Path::new("test.txt");
+    let path = Path::new("input.txt");
     let display = path.display();
 
     // Open the path in read-only mode, returns `io::Result<File>`
@@ -41,7 +41,10 @@ fn main() {
         a.start[2].cmp(&b.start[2])
     });
 
-    let mut z_plane = vec![vec![(0u32, 0u32);3];3];
+    let mut supports_map: HashMap<u32, HashSet<u32>> = blocks.iter().map(|b| (b.id, HashSet::new())).collect();
+    supports_map.insert(0, HashSet::new());
+
+    let mut z_plane = vec![vec![(0u32, 0u32);10];10];
     for block in &mut blocks {
         let mut max_z = 0;
         for x in block.start[0]..=block.end[0] {
@@ -55,20 +58,35 @@ fn main() {
         for x in block.start[0]..=block.end[0] {
             for y in block.start[1]..=block.end[1] {
                 for z in 1..=(block.end[2] - block.start[2] + 1) {
-                    if z_plane[x as usize][y as usize].1 == max_z {
-                        block.sits_on_top_of.insert(z_plane[x as usize][y as usize].0);
+                    let z_top = &mut z_plane[x as usize][y as usize];
+                    if z_top.1 == max_z {
+                        block.sits_on_top_of.insert(z_top.0);
+                        supports_map.get_mut(&z_top.0).unwrap().insert(block.id);
                     }
 
-                    z_plane[x as usize][y as usize].0 = block.id;
-                    z_plane[x as usize][y as usize].1 = max_z + z;
+                    z_top.0 = block.id;
+                    z_top.1 = max_z + z;
                 }
             }
         }
-
-        println!("{:?}", z_plane);
     }
 
-    println!("{:#?}", blocks);
+    let blocks_map: HashMap<u32, &Block> = blocks.iter().map(|b| (b.id, b)).collect();
+    let mut part1 = 0;
+    for (_, supports) in &supports_map {
+        let mut can_disintegrate = true;
+        for support in supports {
+            if blocks_map[support].sits_on_top_of.len() == 1 {
+                can_disintegrate = false;
+                break;
+            }
+        }
+        if can_disintegrate {
+            part1 = part1 + 1;
+        }
+    }
+
+    println!("Part 1: {}", part1);
 }
 
 #[derive(Debug)]
